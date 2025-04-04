@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista de Tarefas Avançada</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://kit.fontawesome.com/675cd1aa23.js" crossorigin="anonymous"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(90deg, rgba(65,184,131,1) 0%, rgba(0,212,255,1) 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app-container {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .new-task-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .new-task-input {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .new-task-input.error {
+      border-color: red;
+    }
+
+    .new-task-button {
+      padding: 10px 20px;
+      background-color: #41b883;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .task-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+
+    .task-item p {
+      margin: 0;
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .task-item.completed p {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .task-item .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .task-item i {
+      cursor: pointer;
+      color: #888;
+    }
+
+    @media (max-width: 600px) {
+      .new-task-container {
+        flex-direction: column;
+      }
+
+      .new-task-button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>Minhas Tarefas</h1>
+      <div class="new-task-container">
+        <input type="text" class="new-task-input" placeholder="Digite uma tarefa..." />
+        <button class="new-task-button">Adicionar</button>
+      </div>
+    </header>
+    <main class="task-list"></main>
+  </div>
+
+  <script>
+    const input = document.querySelector(".new-task-input");
+    const addButton = document.querySelector(".new-task-button");
+    const taskList = document.querySelector(".task-list");
+
+    const getTasks = () => JSON.parse(localStorage.getItem("tasks")) || [];
+    const saveTasks = (tasks) => localStorage.setItem("tasks", JSON.stringify(tasks));
+
+    const renderTasks = () => {
+      const tasks = getTasks();
+      taskList.innerHTML = "";
+      tasks.forEach((task, index) => {
+        const item = document.createElement("div");
+        item.classList.add("task-item");
+        if (task.done) item.classList.add("completed");
+
+        const text = document.createElement("p");
+        text.innerText = task.text;
+        text.addEventListener("click", () => toggleDone(index));
+
+        const actions = document.createElement("div");
+        actions.classList.add("actions");
+
+        const editBtn = document.createElement("i");
+        editBtn.classList.add("fa-solid", "fa-pen");
+        editBtn.addEventListener("click", () => editTask(index));
+
+        const deleteBtn = document.createElement("i");
+        deleteBtn.classList.add("fa-solid", "fa-trash");
+        deleteBtn.addEventListener("click", () => deleteTask(index));
+
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+
+        item.appendChild(text);
+        item.appendChild(actions);
+        taskList.appendChild(item);
+      });
+    };
+
+    const addTask = () => {
+      const value = input.value.trim();
+      if (!value) {
+        input.classList.add("error");
+        return;
+      }
+      input.classList.remove("error");
+      const tasks = getTasks();
+      tasks.push({ text: value, done: false });
+      saveTasks(tasks);
+      input.value = "";
+      renderTasks();
+    };
+
+    const toggleDone = (index) => {
+      const tasks = getTasks();
+      tasks[index].done = !tasks[index].done;
+      saveTasks(tasks);
+      renderTasks();
+    };
+
+    const deleteTask = (index) => {
+      const tasks = getTasks();
+      tasks.splice(index, 1);
+      saveTasks(tasks);
+      renderTasks();
+    };
+
+    const editTask = (index) => {
+      const tasks = getTasks();
+      const newText = prompt("Editar tarefa:", tasks[index].text);
+      if (newText !== null && newText.trim() !== "") {
+        tasks[index].text = newText.trim();
+        saveTasks(tasks);
+        renderTasks();
+      }
+    };
+
+    addButton.addEventListener("click", addTask);
+    input.addEventListener("keydown", (e) => e.key === "Enter" && addTask());
+    input.addEventListener("input", () => input.classList.remove("error"));
+
+    renderTasks();
+  </script>
+</body>
+</html>
